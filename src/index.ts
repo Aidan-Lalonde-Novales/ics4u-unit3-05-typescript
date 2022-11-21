@@ -1,81 +1,126 @@
 /**
- * This program finds an item using binary search.
+ * This program generates numbers for a magic square.
  *
  * By:      Aidan Lalonde-Novales
  * Version: 1.0
- * Since:   2022-11-15
+ * Since:   2022-11-20
  */
 
-import promptSync from 'prompt-sync'
-
-const prompt = promptSync()
+const MAGIC_NUM = 15
+const POSSIBLE_NUM = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 /**
- * Binary Search Function.
+ * Check For Duplicates.
  *
- * @param {number[]} numArray - all numbers to be searched through.
- * @param {number} target - number being requested by the user.
- * @param {number} min - lowest point in the array.
- * @param {number} max - highest point in the array.
- * @returns {number} the array index that matches the target.
+ * @param {number[]} sqrArray - array to be checked.
+ * @returns {boolean} T/F for if sqrArray has duplicates or not.
  */
-function binarySearch(
-  numArray: number[],
-  target: number,
-  min: number,
-  max: number
-): number {
-  // base case to prevent infinite loop
-  if (min > max) {
-    return -1
+function hasDuplicates(sqrArray: number[]): boolean {
+  const sortedSqrArray = sqrArray.slice().sort(function (a, b) {
+    return a - b
+  })
+
+  const results = []
+  for (let count = 0; count < sortedSqrArray.length - 1; count++) {
+    if (sortedSqrArray[count + 1] === sortedSqrArray[count]) {
+      results.push(sortedSqrArray[count])
+    }
   }
+  return results.length !== 0
+}
 
-  const mid = Math.floor((min + max) / 2)
-
-  // true if target equals the matching index
-  if (numArray[mid] === target) {
-    return mid
-    // searches in the lower half if middle > target
-  } else if (numArray[mid] > target) {
-    return binarySearch(numArray, target, min, mid - 1)
-    // searches in the upper half if middle < target
+/**
+ * Check if Square is Magic.
+ *
+ * @param {number[]} sqrArray - array to be checked.
+ * @returns {boolean} T/F for if sqrArray is magic or not.
+ */
+function isMagic(sqrArray: number[]): boolean {
+  if (hasDuplicates(sqrArray)) {
+    return false
   } else {
-    return binarySearch(numArray, target, mid + 1, max)
+    // define rows
+    const row1 = sqrArray[0] + sqrArray[1] + sqrArray[2]
+    const row2 = sqrArray[3] + sqrArray[4] + sqrArray[5]
+    const row3 = sqrArray[6] + sqrArray[7] + sqrArray[8]
+    // define columns
+    const col1 = sqrArray[0] + sqrArray[3] + sqrArray[6]
+    const col2 = sqrArray[1] + sqrArray[4] + sqrArray[7]
+    const col3 = sqrArray[2] + sqrArray[5] + sqrArray[8]
+    // define diagonals
+    const diag1 = sqrArray[0] + sqrArray[4] + sqrArray[8]
+    const diag2 = sqrArray[2] + sqrArray[4] + sqrArray[6]
+
+    return (
+      row1 === row2 &&
+      row2 === row3 &&
+      row3 === col1 &&
+      col1 === col2 &&
+      col2 === col3 &&
+      col3 === diag1 &&
+      diag1 === diag2 &&
+      diag2 === MAGIC_NUM
+    )
   }
 }
 
-// declares constants
-const MIN = 1
-const MAX = 999
-const ARRAY_SIZE = 250
-
-const randomNumArray = new Array(ARRAY_SIZE)
-
-for (let counter = 0; counter < randomNumArray.length; counter++) {
-  randomNumArray[counter] = Math.floor(Math.random() * MAX + MIN)
+/**
+ * Magic Square Printing Function.
+ *
+ * @param {number[]} arr - array to be printed.
+ */
+function printSquare(arr: number[]): void {
+  console.log(
+    `${arr[0]}` +
+      ' ' +
+      `${arr[1]}` +
+      ' ' +
+      `${arr[2]}` +
+      '\n' +
+      `${arr[3]}` +
+      ' ' +
+      `${arr[4]}` +
+      ' ' +
+      `${arr[5]}` +
+      '\n' +
+      `${arr[6]}` +
+      ' ' +
+      `${arr[7]}` +
+      ' ' +
+      `${arr[8]}` +
+      '\n'
+  )
 }
 
-randomNumArray.sort(function (a, b) {
-  return a - b
-})
-
-console.log('Sorted Array: ')
-
-for (let counter = 0; counter < randomNumArray.length; counter++) {
-  process.stdout.write(`${String(randomNumArray[counter])}, `)
+/**
+ * Generates Magic Squares.
+ *
+ * @param {number[]} pNum - possible numbers to be added to a magic square.
+ * @param {number[]} sqrArray - array to be filled with pNum.
+ * @param {number} index - current index of sqrArray to add pNum to.
+ */
+function generateSquare(
+  pNum: number[],
+  sqrArray: number[],
+  index: number
+): void {
+  // prints valid magic squares
+  if (index === 9 && isMagic(sqrArray)) {
+    printSquare(sqrArray)
+  } else {
+    // run through each number for each index
+    if (index !== 9) {
+      for (let count = 0; count < 9; count++) {
+        sqrArray[index] = pNum[count]
+        generateSquare(pNum, sqrArray, index + 1)
+      }
+    }
+  }
 }
 
-console.log('\n')
+const sqrArray: number[] = []
 
-const numInput = Number(prompt('Enter a number to search for (0 - 999): '))
+console.log('Generating All 3x3 Magic Squares...\n')
+generateSquare(POSSIBLE_NUM, sqrArray, 0)
 
-console.log(
-  `${numInput} is in index ${binarySearch(
-    randomNumArray,
-    numInput,
-    0,
-    ARRAY_SIZE - 1
-  )}.`
-)
-
-console.log('\nDone.')
+console.log('Done.')
